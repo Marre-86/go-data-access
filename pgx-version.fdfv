@@ -1,0 +1,50 @@
+package pgx-version
+
+import (
+	"github.com/jackc/pgx/v5/pgxpool"
+	"context"
+	"fmt"
+	"os"
+	"log"
+	"database/sql"
+)
+
+type Album struct {
+	ID	int64
+	Title	string
+	Artist	string
+	Price	float32
+}
+
+func main2() {
+	connString := "postgres://marre:Hombre1986@127.0.0.1:5432/recordings"
+	dbpool, err := pgxpool.New(context.Background(), connString)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("Connected!")
+	defer dbpool.Close()
+}
+
+func albumsByArtist(name string) ([]Album, error) {
+	var albums []Album
+	rows, err := db.Query("SELECT * FROM album WHERE artist = ?", name)
+	if  err != nil {
+		return nil, fmt.Errorf("albumsByArtist %q: %v", name, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var alb Album
+		if err := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err!= nil {
+			return  nil, fmt.Errorf("albumsByArtist %q: %v", name, err)
+		}
+		albums = append(albums, alb)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("albumsByArtist %q: %v", name, err)
+	}
+
+	return albums, nil
+}
+
